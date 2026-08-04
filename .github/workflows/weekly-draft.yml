@@ -1,0 +1,40 @@
+name: 週次で下書きを生成する
+
+on:
+  schedule:
+    # 毎週月曜 9:00 JST = 前日曜 0:00 UTC
+    - cron: "0 0 * * 1"
+  workflow_dispatch: {} # 手動実行もできるようにしておく(テスト用)
+
+permissions:
+  contents: write # 生成した下書きをリポジトリにコミットするために必要
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: リポジトリを取得
+        uses: actions/checkout@v4
+
+      - name: Pythonをセットアップ
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 依存パッケージをインストール
+        run: pip install -r requirements.txt
+
+      - name: 下書きを生成してChatworkに通知
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          CHATWORK_API_TOKEN: ${{ secrets.CHATWORK_API_TOKEN }}
+          CHATWORK_ROOM_ID: ${{ secrets.CHATWORK_ROOM_ID }}
+        run: python generate_draft.py
+
+      - name: 生成結果をリポジトリにコミット
+        run: |
+          git config user.name "note-draft-bot"
+          git config user.email "actions@github.com"
+          git add output/ state/used_topics.json
+          git diff --cached --quiet || git commit -m "週次下書き自動生成: $(date +'%Y-%m-%d')"
+          git push
