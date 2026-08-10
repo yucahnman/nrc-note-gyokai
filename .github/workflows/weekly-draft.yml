@@ -2,8 +2,8 @@ name: 週次で下書きを生成する
 
 on:
   schedule:
-    # 毎週月曜 9:00 JST = 前日曜 0:00 UTC
-    - cron: "0 0 * * 1"
+    # 毎週月曜 7:00 JST = 前日日曜 22:00 UTC
+    - cron: "3 22 * * 0"
   workflow_dispatch: {} # 手動実行もできるようにしておく(テスト用)
 
 permissions:
